@@ -1,0 +1,8 @@
+CREATE SEQUENCE seq_user;
+CREATE SEQUENCE seq_role;
+CREATE SEQUENCE seq_airplane;
+CREATE SEQUENCE seq_route;
+CREATE SEQUENCE seq_aircompany;
+CREATE SEQUENCE seq_order;
+CREATE SEQUENCE seq_route;
+CREATE SEQUENCE seq_ticket;
