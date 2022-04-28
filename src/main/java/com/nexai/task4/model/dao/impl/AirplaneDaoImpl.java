@@ -1,5 +1,8 @@
 package com.nexai.task4.model.dao.impl;
 
+import com.nexai.task4.model.entity.Aircompany;
+import com.nexai.task4.model.entity.Role;
+import com.nexai.task4.model.entity.User;
 import com.nexai.task4.pool.DataSource;
 import com.nexai.task4.exception.DaoException;
 import com.nexai.task4.model.dao.AirplaneDao;
@@ -34,11 +37,17 @@ public class AirplaneDaoImpl implements AirplaneDao {
 
     @Override
     public void create(Airplane airplane) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(CREATE_AIRPLANE)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(CREATE_AIRPLANE)) {
             statement.setString(1, airplane.getModel());
-            statement.setInt(1, airplane.getAircompanyId());
-            statement.executeUpdate();
+
+            Integer aircompanyId = null;
+
+            if (airplane.getAircompany() != null) {
+                aircompanyId = airplane.getAircompany().getId();
+            }
+            statement.setInt(5, aircompanyId);
+            statement.execute();
             log.info("Airplane added successfully");
         } catch (SQLException e) {
             log.error("Airplane not added");
@@ -48,15 +57,51 @@ public class AirplaneDaoImpl implements AirplaneDao {
     }
 
     @Override
+    public void update(Airplane airplane) throws DaoException {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(UPDATE_AIRPLANE)) {
+            statement.setString(1, airplane.getModel());
+            Integer aircompanyId = null;
+
+            if (airplane.getAircompany() != null) {
+                aircompanyId = airplane.getAircompany().getId();
+            }
+
+            statement.setInt(2, aircompanyId);
+            statement.setInt(3, airplane.getId());
+            statement.executeUpdate();
+            log.info("Airplane updated successfully");
+        } catch (SQLException e) {
+            log.error("Airplane can't be updated");
+            throw new DaoException("SQL error", e);
+        }
+    }
+
+    @Override
+    public void delete(Airplane airplane) throws DaoException {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE_AIRPLANE)) {
+            statement.setInt(1, airplane.getId());
+            statement.executeUpdate();
+            log.info("Airplane was deleted successfully");
+        } catch (SQLException e) {
+            log.error("Airplane was not deleted");
+            throw new DaoException("Airplane was not deleted", e);
+        }
+    }
+
+    @Override
     public List<Airplane> getAll() throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_ALL_AIRPLANE)) {
+        List<Aircompany> aircompanies = new ArrayList<>();
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_ALL_AIRPLANE)) {
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
-                Airplane airplane = new Airplane();
-                airplane.setId(rs.getInt(1));
-                airplane.setModel(rs.getString(2));
-
+                var airplane = Airplane.builder()
+                        .id(rs.getInt(1))
+                        .model(rs.getString(2))
+                        .aircompany(checkAircompanyExist(rs.getInt(3), rs.getString(4), aircompanies))
+                        .build();
 
                 airplanes.add(airplane);
             }
@@ -68,20 +113,37 @@ public class AirplaneDaoImpl implements AirplaneDao {
         return airplanes;
     }
 
+    public Aircompany checkAircompanyExist(int id, String name, List<Aircompany> aircompanies) {
+        var mayBeAircompany = aircompanies.stream().filter(aircompany -> aircompany.getId() == id).findFirst();
+
+        if (mayBeAircompany.isPresent()) {
+            return mayBeAircompany.get();
+        } else {
+            var aircompany = Aircompany.builder()
+                    .id(id)
+                    .name(name)
+                    .airplaneList(new ArrayList<>())
+                    .build();
+
+            aircompanies.add(aircompany);
+            return aircompany;
+        }
+    }
+
+
     @Override
     public Airplane getById(int id) throws DaoException {
         Airplane airplane = null;
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_AIRPLANE)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_AIRPLANE)) {
             statement.setInt(1, id);
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
-                airplane = new Airplane();
-                airplane.setId(rs.getInt(1));
-                airplane.setModel(rs.getString(2));
-
+                airplane = Airplane.builder()
+                        .id(rs.getInt(1))
+                        .model(rs.getString(2))
+                        .build();
             }
-
         } catch (SQLException e) {
             log.error("Aircompany with id" + airplane.getId() + " didn't found");
             throw new DaoException("SQL error", e);
@@ -90,32 +152,6 @@ public class AirplaneDaoImpl implements AirplaneDao {
         return airplane;
     }
 
-    @Override
-    public void update(Airplane airplane) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(UPDATE_AIRPLANE)) {
-            statement.setString(1, airplane.getModel());
-            statement.setInt(2, airplane.getId());
-            statement.executeUpdate();
-            log.info("Airplane updated successfully");
-        } catch (SQLException e) {
-            log.error("Airplane can't be updated");
-            throw new DaoException("SQL error", e);
-        }
-    }
-
-    @Override
-    public void delete(Airplane airplane) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(DELETE_AIRPLANE)) {
-            statement.setInt(1, airplane.getId());
-            statement.executeUpdate();
-            log.info("Airplane was deleted successfully");
-        } catch (SQLException e) {
-            log.error("Airplane was not deleted");
-            throw new DaoException("Airplane was not deleted", e);
-        }
-    }
 
     @Override
     public Airplane getAirplaneByModel(String model) throws DaoException {

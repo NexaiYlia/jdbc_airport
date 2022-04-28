@@ -15,7 +15,5 @@ public class Order {
     private int id;
     private String number;
     private Date date;
-    private User user;
-    private Route route;
 
 }

@@ -34,8 +34,8 @@ public class RouteDaoImpl implements RouteDao {
 
     @Override
     public void create(Route route) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(CREATE_ROUTE)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(CREATE_ROUTE)) {
             statement.setInt(1, route.getId());
             statement.setString(2, route.getCityFrom());
             statement.setString(3, route.getCityTo());
@@ -50,8 +50,8 @@ public class RouteDaoImpl implements RouteDao {
 
     @Override
     public List<Route> getAll() throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_ALL_ROUTE)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_ALL_ROUTE)) {
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
                 Route route = new Route();
@@ -73,8 +73,8 @@ public class RouteDaoImpl implements RouteDao {
     @Override
     public Route getById(int id) throws DaoException {
         Route route = null;
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_ROUTE)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_ROUTE)) {
             statement.setInt(1, id);
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
@@ -95,8 +95,8 @@ public class RouteDaoImpl implements RouteDao {
 
     @Override
     public void update(Route route) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(UPDATE_ROUTE)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(UPDATE_ROUTE)) {
             statement.setString(1, route.getCityFrom());
             statement.setString(2, route.getCityTo());
             statement.setInt(3, route.getPrice());
@@ -111,8 +111,8 @@ public class RouteDaoImpl implements RouteDao {
 
     @Override
     public void delete(Route route) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(DELETE_ROUTE)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE_ROUTE)) {
             statement.setInt(1, route.getId());
             statement.executeUpdate();
             log.info("Route was deleted successfully");

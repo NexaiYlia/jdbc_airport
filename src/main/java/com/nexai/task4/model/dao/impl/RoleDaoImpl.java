@@ -32,8 +32,8 @@ public class RoleDaoImpl implements RoleDao {
 
     @Override
     public void create(Role role) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(CREATE_ROLE)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(CREATE_ROLE)) {
             statement.setInt(1, role.getId());
             statement.setString(2, role.getName());
             statement.executeUpdate();
@@ -46,8 +46,9 @@ public class RoleDaoImpl implements RoleDao {
 
     @Override
     public List<Role> getAll() throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_ALL_ROLE)) {
+
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_ALL_ROLE)) {
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
                 Role role = new Role();
@@ -67,8 +68,8 @@ public class RoleDaoImpl implements RoleDao {
     @Override
     public Role getById(int id) throws DaoException {
         Role role = null;
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_ROLE)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_ROLE)) {
             statement.setInt(1, id);
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {

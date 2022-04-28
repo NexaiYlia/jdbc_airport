@@ -1,5 +1,6 @@
 package com.nexai.task4.model.dao.impl;
 
+import com.nexai.task4.model.entity.Role;
 import com.nexai.task4.pool.DataSource;
 import com.nexai.task4.exception.DaoException;
 import com.nexai.task4.model.dao.AircompanyDao;
@@ -23,8 +24,10 @@ public class AircompanyDaoImpl implements AircompanyDao {
     private static final String FIND_ALL_AIRCOMPANY = "SELECT * FROM airportdb.aircompany ";
     private static final String FIND_ALL_AIRPLANES_OF_AIRCOMPANY = "SELECT * FROM airportdb.airplane WHERE aircompany_id=?";
     private static final String FIND_BY_ID_AIRCOMPANY = "SELECT * FROM airportdb.aircompany WHERE id=?";
+    private static final String GET_ALL_AIRCOMPANIES_WITH_AIRPLANES = "SELECT airplane.id as airplane_id, model,  aircompany.id FROM aircompany a "
+            + "left join airplane b on b.aircompany_id = a.id;";
     private static AircompanyDaoImpl instanse = new AircompanyDaoImpl();
-    private List<Aircompany> aircompanies = new ArrayList<>();
+
 
     private AircompanyDaoImpl() {
     }
@@ -35,8 +38,8 @@ public class AircompanyDaoImpl implements AircompanyDao {
 
     @Override
     public void create(Aircompany aircompany) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(CREATE_AIRCOMPANY)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(CREATE_AIRCOMPANY)) {
             statement.setString(1, aircompany.getName());
             statement.executeUpdate();
             log.info("Aircompany was added successfully");
@@ -49,8 +52,9 @@ public class AircompanyDaoImpl implements AircompanyDao {
 
     @Override
     public List<Aircompany> getAll() throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_ALL_AIRCOMPANY)) {
+        List<Aircompany> aircompanies = new ArrayList<>();
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_ALL_AIRCOMPANY)) {
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
                 Aircompany aircompany = new Aircompany();
@@ -70,14 +74,13 @@ public class AircompanyDaoImpl implements AircompanyDao {
     @Override
     public List<Airplane> getAllAirplaneOfAircompany() throws DaoException {
         List<Airplane> airplanes = new ArrayList<>();
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_ALL_AIRPLANES_OF_AIRCOMPANY)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_ALL_AIRPLANES_OF_AIRCOMPANY)) {
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
                 Airplane airplane = new Airplane();
                 airplane.setId(rs.getInt(1));
                 airplane.setModel(rs.getString(2));
-                airplane.setAircompanyId(rs.getInt(3));
                 airplanes.add(airplane);
             }
         } catch (SQLException e) {
@@ -89,10 +92,30 @@ public class AircompanyDaoImpl implements AircompanyDao {
     }
 
     @Override
+    public List<Aircompany> getAllAircompanyWithAirplanes() {
+        List<Aircompany> aircompanies = new ArrayList<>();
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_ALL_AIRCOMPANIES_WITH_AIRPLANES)) {
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+                var aircompany = checkAircompanyExist(rs.getInt("id"), rs.getString("name"), aircompanies);
+
+                var airplane = Airplane.builder().id(rs.getInt(1)).model(rs.getString(2)).build();
+                aircompany.getAirplaneList().add(airplane);
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return aircompanies;
+    }
+
+
+    @Override
     public Aircompany getById(int id) throws DaoException {
         Aircompany aircompany = null;
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_AIRCOMPANY)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_AIRCOMPANY)) {
             statement.setInt(1, id);
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
@@ -111,8 +134,8 @@ public class AircompanyDaoImpl implements AircompanyDao {
 
     @Override
     public void update(Aircompany aircompany) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(UPDATE_AIRCOMPANY)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(UPDATE_AIRCOMPANY)) {
             statement.setString(1, aircompany.getName());
             statement.setInt(2, aircompany.getId());
             statement.executeUpdate();
@@ -125,8 +148,8 @@ public class AircompanyDaoImpl implements AircompanyDao {
 
     @Override
     public void delete(Aircompany aircompany) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(DELETE_AIRCOMPANY)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE_AIRCOMPANY)) {
             statement.setInt(1, aircompany.getId());
             statement.executeUpdate();
             log.info("Aircompany was deleted successfully");
@@ -135,4 +158,22 @@ public class AircompanyDaoImpl implements AircompanyDao {
             throw new DaoException("Aircompany was not deleted", e);
         }
     }
+
+    public static Aircompany checkAircompanyExist(int id, String name, List<Aircompany> aircompanies) {
+        var mayBeAircompany = aircompanies.stream().filter(aircompany -> aircompany.getId() == id).findFirst();
+
+        if (mayBeAircompany.isPresent()) {
+            return mayBeAircompany.get();
+        } else {
+            var aircompany = Aircompany.builder()
+                    .id(id)
+                    .name(name)
+                    .airplaneList(new ArrayList<>())
+                    .build();
+
+            aircompanies.add(aircompany);
+            return aircompany;
+        }
+    }
 }
+

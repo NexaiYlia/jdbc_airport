@@ -1,11 +1,9 @@
 package com.nexai.task4.model.dao.impl;
 
-import com.nexai.task4.pool.DataSource;
 import com.nexai.task4.exception.DaoException;
 import com.nexai.task4.model.dao.OrderDao;
 import com.nexai.task4.model.entity.Order;
-import com.nexai.task4.model.entity.Route;
-import com.nexai.task4.model.entity.User;
+import com.nexai.task4.pool.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,12 +30,10 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public void create(Order order) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(CREATE_ORDER)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(CREATE_ORDER)) {
             statement.setString(1, order.getNumber());
             statement.setDate(2, (Date) order.getDate());
-            statement.setObject(3, order.getUser());
-            statement.setObject(4, order.getRoute());
             statement.executeUpdate();
             log.info("Order was added successfully");
         } catch (SQLException e) {
@@ -48,16 +44,14 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public List<Order> getAll() throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_ALL_ORDER)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_ALL_ORDER)) {
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
                 Order order = new Order();
                 order.setId(rs.getInt(1));
                 order.setNumber(rs.getString(2));
                 order.setDate(rs.getDate(3));
-                order.setUser((User) rs.getObject(4));
-                order.setRoute((Route) rs.getObject(5));
 
                 orders.add(order);
             }
@@ -72,8 +66,8 @@ public class OrderDaoImpl implements OrderDao {
     @Override
     public Order getById(int id) throws DaoException {
         Order order = null;
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_ORDER)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_ORDER)) {
             statement.setInt(1, id);
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
@@ -81,8 +75,7 @@ public class OrderDaoImpl implements OrderDao {
                 order.setId(rs.getInt(1));
                 order.setNumber(rs.getString(2));
                 order.setDate(rs.getDate(3));
-                order.setUser((User) rs.getObject(4));
-                order.setRoute((Route) rs.getObject(5));
+
             }
         } catch (SQLException e) {
             log.error("Order with id" + order.getId() + " wasn't found");
@@ -94,13 +87,11 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public void update(Order order) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(UPDATE_ORDER)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(UPDATE_ORDER)) {
             statement.setString(1, order.getNumber());
             statement.setDate(2, (Date) order.getDate());
-            statement.setObject(3, order.getUser());
-            statement.setObject(4, order.getRoute());
-            statement.setInt(5, order.getId());
+            statement.setInt(3, order.getId());
             statement.executeUpdate();
             log.info("Order was updated successfully");
         } catch (SQLException e) {
@@ -111,8 +102,8 @@ public class OrderDaoImpl implements OrderDao {
 
     @Override
     public void delete(Order order) throws DaoException {
-        Connection connection = DataSource.getInstance().getConnection();
-        try (PreparedStatement statement = connection.prepareStatement(DELETE_ORDER)) {
+        try (Connection connection = DataSource.getInstance().getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE_ORDER)) {
             statement.setInt(1, order.getId());
             statement.executeUpdate();
             log.info("Order was deleted successfully");

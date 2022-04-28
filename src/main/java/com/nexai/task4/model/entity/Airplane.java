@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 public class Airplane {
     private int id;
     private String model;
-    private int aircompanyId;
-
+    private Aircompany aircompany;
 
 }
