@@ -1,0 +1,21 @@
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence" version="2.2">
+    <persistence-unit name="by.it_academy">
+        <description>Hibernate Demo</description>
+        <class>model.entity.Aircompany</class>
+        <class>model.entity.Airplane</class>
+        <class>model.entity.Order</class>
+        <class>model.entity.Role</class>
+        <class>model.entity.Route</class>
+        <class>model.entity.Ticket</class>
+        <class>model.entity.User</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/airport"/>
+            <property name="javax.persistence.jdbc.user" value="admin"/>
+            <property name="javax.persistence.jdbc.password" value="admin"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>
